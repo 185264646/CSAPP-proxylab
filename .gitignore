@@ -51,7 +51,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# repository specific files ans directorys
+# repository specific files and directorys
 /.noproxy/
 /.proxy/
 /.vscode/
