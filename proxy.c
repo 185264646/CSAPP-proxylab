@@ -24,6 +24,7 @@ struct entity_info {
 	enum entity_error_type err_type;
 	char *data;
 };
+typedef void *pthread_func(void *);
 
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
@@ -46,11 +47,14 @@ int forward_server_to_client(rio_t *, rio_t *);
 
 void clienterror(int fd, enum client_error_type);
 
+pthread_func incoming_connection_handler;
+
 int main(int argc, char *argv[])
 {
 	int listenfd, connfd;
 	struct sockaddr_storage sockaddr;
 	socklen_t len;
+	pthread_t dummy;
 	if(argc != 2)
 	{
 		fprintf(stderr, "\e[1;031mUsage: %s port\n", argv[0]);
@@ -60,12 +64,15 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 		connfd = Accept(listenfd, (SA *)&sockaddr, &len);
+		Pthread_create(&dummy, (pthread_attr_t *)NULL, incoming_connection_handler, (void *)(long long)connfd);
+		#if 0
 		if(fork() == 0)
 		{
 			serve(connfd);
 			Close(connfd);
 			exit(0);
 		}
+		#endif
 	}
 	printf("%s", user_agent_hdr);
 	return 0;
@@ -449,4 +456,13 @@ void clienterror(int fd, enum client_error_type err_type)
 			dprintf(fd, "HTTP/1.0 500 Bad Request\r\n\r\n");
 			break;
 	}
+}
+
+void *incoming_connection_handler(void *clientfd_)
+{
+	int clientfd = (long long)clientfd_;
+	serve(clientfd);
+	Close(clientfd);
+	Pthread_exit((void *)NULL);
+	return 0; // never execute to here
 }

@@ -55,3 +55,7 @@ dkms.conf
 /.noproxy/
 /.proxy/
 /.vscode/
+
+# executables
+/proxy
+/tiny/tiny
